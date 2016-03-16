@@ -1,0 +1,11 @@
+%%-*- mode: erlang -*-
+{application, kct,
+ [ {description,  "kct"}
+ , {vsn,          "git"}
+ , {modules,      []}
+ , {registered,   []}
+ , {applications,
+    [ kernel
+    , stdlib
+    ]}
+ ]}.
