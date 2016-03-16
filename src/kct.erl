@@ -48,7 +48,7 @@ run_test(Opts) ->
   Result.
 
 defaults() ->
-  [ {include, "include"}
+  [ {include, "../include"}
   , {abort_if_missing_suites, true}
   ].
 
