@@ -56,8 +56,7 @@ print_result({Ok, Failed, {UserSkipped, AutoSkipped}}) ->
   {ok, Dir} = file:get_cwd(),
   io:format("~n"
             "----------------------------------------------~n"
-            "tests: ~p / ~p~n"
-            "skipped: ~p~n"
+            "passed: ~p / failed: ~p / skipped ~p~n"
             "report: file://~s/test/index.html~n"
             "----------------------------------------------~n",
             [Ok, Failed, UserSkipped + AutoSkipped, Dir]);
