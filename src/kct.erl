@@ -5,7 +5,7 @@
 -module(kct).
 
 %%%_* Exports ==========================================================
--export([run/1, run/2]).
+-export([run/0, run/1, run/2]).
 
 %%%_* Types ============================================================
 -type suite()     :: atom() | string().
@@ -15,6 +15,12 @@
 -type testcases() :: [testcase()] | testcase().
 
 %%%_* API ==============================================================
+-spec run() -> ok.
+run() ->
+  Files = filelib:wildcard("test/*_SUITE.erl"),
+  Suites = [filename:basename(File, ".erl") || File <- Files],
+  run(Suites).
+
 -spec run(suites()) -> ok.
 run(S) ->
   Result = run_test([{suite, to_suite(S)}]),
@@ -42,13 +48,14 @@ to_suite([C|_]=Suite) when is_integer(C) ->
 
 run_test(Opts) ->
   {ok, Dir} = file:get_cwd(),
+  Defaults = defaults(Dir),
   ok = file:set_cwd(Dir ++ "/test"),
-  Result = ct:run_test(Opts ++ defaults()),
+  Result = ct:run_test(Opts ++ Defaults),
   ok = file:set_cwd(Dir),
   Result.
 
-defaults() ->
-  [ {include, "../include"}
+defaults(Dir) ->
+  [ {include, Dir ++ "/include"}
   , {abort_if_missing_suites, true}
   ].
 
