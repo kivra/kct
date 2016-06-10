@@ -18,20 +18,24 @@
 -spec run() -> ok.
 run() ->
   Files = filelib:wildcard("test/*_SUITE.erl"),
-  Suites = [filename:basename(File, ".erl") || File <- Files],
-  run(Suites).
+  case [filename:basename(File, ".erl") || File <- Files] of
+    [] ->
+      io:format("no suites found~n");
+    Suites ->
+      run(Suites)
+  end.
 
 -spec run(suites()) -> ok.
 run(S) ->
   Result = run_test([{suite, to_suite(S)}]),
-  print_result(Result).
+  handle_result(Result).
 
 -spec run(suites(), testcases()) -> ok.
 run(S, TC) ->
   Result = run_test([ {suite, to_suite(S)}
                     , {testcase, TC}
                     ]),
-  print_result(Result).
+  handle_result(Result).
 
 %%%_* Internal =========================================================
 to_suite(Suite) when is_atom(Suite) ->
@@ -59,16 +63,33 @@ defaults(Dir) ->
   , {abort_if_missing_suites, true}
   ].
 
-print_result({Ok, Failed, {UserSkipped, AutoSkipped}}) ->
+handle_result({Ok, Failed, {UserSkipped, AutoSkipped}}) ->
   {ok, Dir} = file:get_cwd(),
+  Uri = lists:flatten(io_lib:format("file://~s/test/index.html", [Dir])),
+  case Failed + UserSkipped + AutoSkipped > 0 of
+    true ->
+      open(Uri);
+    false ->
+      ok
+  end,
   io:format("~n"
-            "----------------------------------------------~n"
-            "passed: ~p / failed: ~p / skipped: ~p~n"
-            "report: file://~s/test/index.html~n"
-            "----------------------------------------------~n",
-            [Ok, Failed, UserSkipped + AutoSkipped, Dir]);
-print_result({error, Reason}) ->
-  io:format("Failed to run tests: ~p", [Reason]).
+            "%%%~n"
+            "%%% passed: ~p / failed: ~p / skipped: ~p~n"
+            "%%% report: ~s~n"
+            "%%%~n",
+            [Ok, Failed, UserSkipped + AutoSkipped, Uri]);
+handle_result({error, Reason}) ->
+  io:format("Failed to run tests: ~p~n", [Reason]).
+
+open(Uri) ->
+  open(os:type(), Uri).
+
+open({unix, darwin},  Uri) ->
+  os:cmd("open " ++ Uri);
+open({unix, linux}, Uri) ->
+  os:cmd("xdg-open " ++ Uri);
+open(_, _) ->
+  not_supported.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
